@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<workload name="10 Hr-10 Stg-@nodes Nodes-@objsizekb KB-W @write-R @read-D @delete" description="">
+<!-- Launch Command: @launchcommand -->
+
+<storage type="hcp" config="username=@user;password=@passwd;endpoint=@tenant;signer_version=@signer;disable_cert_check=@insecure;protocol=@protocol;optimize_dir=@diroptimize" />
+
+	<workflow>
+		<workstage name="init-bucket">
+			<work type="init" workers="@workers1" config="cprefix=cos-ns-;containers=@containernum" />
+		</workstage>
+
+		<workstage name="WarmUp">
+			<work name="main" type="normal" interval="15" runtime="3600" workers="@workerswm" division="object">
+				<operation type="write"  ratio="90"       config="cprefix=cos-ns-; containers=@containernum; oprefix=obj-warmup-; objects=r(1,1000000000); sizes=c(1)KB;" />
+				<operation type="read"   ratio="5"        config="cprefix=cos-ns-; containers=@containernum; oprefix=obj-warmup-; objects=r(1,1000000000);" />
+				<operation type="delete" ratio="5"        config="cprefix=cos-ns-; containers=@containernum; oprefix=obj-warmup-; objects=r(1,1000000000);" />
+			</work>
+		</workstage>
+
+		<workstage name="Stage1-@workers1">
+			<work name="main" type="normal" interval="15" runtime="3600" workers="@workers1" division="object">
+				<operation type="write"  ratio="@write"   config="cprefix=cos-ns-; containers=@containernum; oprefix=obj-stage1-; objects=r(1,1000000000); sizes=c(@objsizekb)KB;" />
+				<operation type="read"   ratio="@read"    config="cprefix=cos-ns-; containers=@containernum; oprefix=obj-stage1-; objects=r(1,1000000000);" />
+				<operation type="delete" ratio="@delete"  config="cprefix=cos-ns-; containers=@containernum; oprefix=obj-stage1-; objects=r(1,1000000000);" />
+			</work>
+		</workstage>
+
+		<workstage name="Stage2-@workers2">
+			<work name="main" type="normal" interval="15" runtime="3600" workers="@workers2" division="object">
+				<operation type="write"  ratio="@write"   config="cprefix=cos-ns-; containers=@containernum; oprefix=obj-stage2-; objects=r(1,1000000000); sizes=c(@objsizekb)KB;" />
+				<operation type="read"   ratio="@read"    config="cprefix=cos-ns-; containers=@containernum; oprefix=obj-stage2-; objects=r(1,1000000000);" />
+				<operation type="delete" ratio="@delete"  config="cprefix=cos-ns-; containers=@containernum; oprefix=obj-stage2-; objects=r(1,1000000000);" />
+			</work>
+		</workstage>
+
+		<workstage name="Stage3-@workers3">
+			<work name="main" type="normal" interval="15" runtime="3600" workers="@workers3" division="object">
+				<operation type="write"  ratio="@write"   config="cprefix=cos-ns-; containers=@containernum; oprefix=obj-stage3-; objects=r(1,1000000000); sizes=c(@objsizekb)KB;" />
+				<operation type="read"   ratio="@read"    config="cprefix=cos-ns-; containers=@containernum; oprefix=obj-stage3-; objects=r(1,1000000000);" />
+				<operation type="delete" ratio="@delete"  config="cprefix=cos-ns-; containers=@containernum; oprefix=obj-stage3-; objects=r(1,1000000000);" />
+			</work>
+		</workstage>
+
+		<workstage name="Stage4-@workers4">
+			<work name="main" type="normal" interval="15" runtime="3600" workers="@workers4" division="object">
+				<operation type="write"  ratio="@write"   config="cprefix=cos-ns-; containers=@containernum; oprefix=obj-stage4-; objects=r(1,1000000000); sizes=c(@objsizekb)KB;" />
+				<operation type="read"   ratio="@read"    config="cprefix=cos-ns-; containers=@containernum; oprefix=obj-stage4-; objects=r(1,1000000000);" />
+				<operation type="delete" ratio="@delete"  config="cprefix=cos-ns-; containers=@containernum; oprefix=obj-stage4-; objects=r(1,1000000000);" />
+			</work>
+		</workstage>
+
+		<workstage name="Stage5-@workers5">
+			<work name="main" type="normal" interval="15" runtime="3600" workers="@workers5" division="object">
+				<operation type="write"  ratio="@write"   config="cprefix=cos-ns-; containers=@containernum; oprefix=obj-stage5-; objects=r(1,1000000000); sizes=c(@objsizekb)KB;" />
+				<operation type="read"   ratio="@read"    config="cprefix=cos-ns-; containers=@containernum; oprefix=obj-stage5-; objects=r(1,1000000000);" />
+				<operation type="delete" ratio="@delete"  config="cprefix=cos-ns-; containers=@containernum; oprefix=obj-stage5-; objects=r(1,1000000000);" />
+			</work>
+		</workstage>
+
+		<workstage name="Stage6-@workers6">
+			<work name="main" type="normal" interval="15" runtime="3600" workers="@workers6" division="object">
+				<operation type="write"  ratio="@write"   config="cprefix=cos-ns-; containers=@containernum; oprefix=obj-stage6-; objects=r(1,1000000000); sizes=c(@objsizekb)KB;" />
+				<operation type="read"   ratio="@read"    config="cprefix=cos-ns-; containers=@containernum; oprefix=obj-stage6-; objects=r(1,1000000000);" />
+				<operation type="delete" ratio="@delete"  config="cprefix=cos-ns-; containers=@containernum; oprefix=obj-stage6-; objects=r(1,1000000000);" />
+			</work>
+		</workstage>
+
+		<workstage name="Stage7-@workers7">
+			<work name="main" type="normal" interval="15" runtime="3600" workers="@workers7" division="object">
+				<operation type="write"  ratio="@write"   config="cprefix=cos-ns-; containers=@containernum; oprefix=obj-stage7-; objects=r(1,1000000000); sizes=c(@objsizekb)KB;" />
+				<operation type="read"   ratio="@read"    config="cprefix=cos-ns-; containers=@containernum; oprefix=obj-stage7-; objects=r(1,1000000000);" />
+				<operation type="delete" ratio="@delete"  config="cprefix=cos-ns-; containers=@containernum; oprefix=obj-stage7-; objects=r(1,1000000000);" />
+			</work>
+		</workstage>
+
+		<workstage name="Stage8-@workers8">
+			<work name="main" type="normal" interval="15" runtime="3600" workers="@workers8" division="object">
+				<operation type="write"  ratio="@write"   config="cprefix=cos-ns-; containers=@containernum; oprefix=obj-stage8-; objects=r(1,1000000000); sizes=c(@objsizekb)KB;" />
+				<operation type="read"   ratio="@read"    config="cprefix=cos-ns-; containers=@containernum; oprefix=obj-stage8-; objects=r(1,1000000000);" />
+				<operation type="delete" ratio="@delete"  config="cprefix=cos-ns-; containers=@containernum; oprefix=obj-stage8-; objects=r(1,1000000000);" />
+			</work>
+		</workstage>
+
+		<workstage name="Stage9-@workers9">
+			<work name="main" type="normal" interval="15" runtime="3600" workers="@workers9" division="object">
+				<operation type="write"  ratio="@write"   config="cprefix=cos-ns-; containers=@containernum; oprefix=obj-stage9-; objects=r(1,1000000000); sizes=c(@objsizekb)KB;" />
+				<operation type="read"   ratio="@read"    config="cprefix=cos-ns-; containers=@containernum; oprefix=obj-stage9-; objects=r(1,1000000000);" />
+				<operation type="delete" ratio="@delete"  config="cprefix=cos-ns-; containers=@containernum; oprefix=obj-stage9-; objects=r(1,1000000000);" />
+			</work>
+		</workstage>
+
+		<workstage name="Stage10-@workersX">
+			<work name="main" type="normal" interval="15" runtime="3600" workers="@workersX" division="object">
+				<operation type="write"  ratio="@write"   config="cprefix=cos-ns-; containers=@containernum; oprefix=obj-stage10-; objects=r(1,1000000000); sizes=c(@objsizekb)KB;" />
+				<operation type="read"   ratio="@read"    config="cprefix=cos-ns-; containers=@containernum; oprefix=obj-stage10-; objects=r(1,1000000000);" />
+				<operation type="delete" ratio="@delete"  config="cprefix=cos-ns-; containers=@containernum; oprefix=obj-stage10-; objects=r(1,1000000000);" />
+			</work>
+		</workstage>
+    </workflow>
+</workload>
+
