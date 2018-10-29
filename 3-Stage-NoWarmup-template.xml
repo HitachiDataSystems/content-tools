@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<workload name="3Stg-@nodesNodes-@objsizekbKB-W@write-R@read-D@delete" description="">
+<!-- Launch Command: @launchcommand -->
+
+<storage type="hcp" config="username=@user;password=@passwd;endpoint=@tenant;signer_version=@signer;disable_cert_check=@insecure;protocol=@protocol;optimize_dir=@diroptimize" />
+
+	<workflow>
+		<workstage name="init-bucket">
+			<work type="init" workers="1" config="cprefix=cos-ns-;containers=r(@containernum,@containernum)" />
+		</workstage>
+
+		<workstage name="Stage1-@workers1">
+			<work name="main" type="normal" interval="@interval" runtime="@runtime" workers="@workers1" division="object">
+				<operation type="write"  ratio="@write"   config="cprefix=cos-ns-; containers=r(@containernum,@containernum); oprefix=obj-stage1-; objects=r(1,1000000000); sizes=c(@objsizekb)KB;" />
+				<operation type="read"   ratio="@read"    config="cprefix=cos-ns-; containers=r(@containernum,@containernum); oprefix=obj-stage1-; objects=r(1,1000000000);" />
+				<operation type="delete" ratio="@delete"  config="cprefix=cos-ns-; containers=r(@containernum,@containernum); oprefix=obj-stage1-; objects=r(1,1000000000);" />
+			</work>
+		</workstage>
+
+		<workstage name="Stage2-@workers2">
+			<work name="main" type="normal" interval="@interval" runtime="@runtime" workers="@workers2" division="object">
+				<operation type="write"  ratio="@write"   config="cprefix=cos-ns-; containers=r(@containernum,@containernum); oprefix=obj-stage2-; objects=r(1,1000000000); sizes=c(@objsizekb)KB;" />
+				<operation type="read"   ratio="@read"    config="cprefix=cos-ns-; containers=r(@containernum,@containernum); oprefix=obj-stage2-; objects=r(1,1000000000);" />
+				<operation type="delete" ratio="@delete"  config="cprefix=cos-ns-; containers=r(@containernum,@containernum); oprefix=obj-stage2-; objects=r(1,1000000000);" />
+			</work>
+		</workstage>
+
+		<workstage name="Stage3-@workers3">
+			<work name="main" type="normal" interval="@interval" runtime="@runtime" workers="@workers3" division="object">
+				<operation type="write"  ratio="@write"   config="cprefix=cos-ns-; containers=r(@containernum,@containernum); oprefix=obj-stage3-; objects=r(1,1000000000); sizes=c(@objsizekb)KB;" />
+				<operation type="read"   ratio="@read"    config="cprefix=cos-ns-; containers=r(@containernum,@containernum); oprefix=obj-stage3-; objects=r(1,1000000000);" />
+				<operation type="delete" ratio="@delete"  config="cprefix=cos-ns-; containers=r(@containernum,@containernum); oprefix=obj-stage3-; objects=r(1,1000000000);" />
+			</work>
+		</workstage>
+
+    </workflow>
+</workload>
+
