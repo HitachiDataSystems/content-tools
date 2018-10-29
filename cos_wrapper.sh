@@ -17,22 +17,9 @@ SIGNER=""
 SECURE=""
 PROTOCOL=""
 OPTIMIZE_DIR=""
+TEST_MODE="False"
+SUBMIT_MODE="False"
 
-#LOOP=$(($# / 2))
-LOOP=`expr $# / 2`
-if [ $LOOP == 0 ] && [ $# != 0 ]; then
-#    LOOP=$(($LOOP + 1))
-    LOOP=`expr $LOOP + 1`
-fi
-
-if [ $# != 30 ]; then
-    if [ $# == 0 ] || [ $1 != "-h" ]; then
-        if [ $1 != "-submit" ]; then
-           echo "There are missing parameters, please see the help."
-           exit
-        fi 
-    fi
-fi
 
 usage()
 {
@@ -56,23 +43,79 @@ usage()
     echo "  -s   Whether or not to disable certificate verification for SSL, it cab be true or false"
     echo "  -pro Whether or not to use the SSL, it can http or https"
     echo "  -od  Whether or not to use an optimized directory structure, it can be true or false"
-    echo "  -submit   Submit the generated workload"
-    echo "e.g. ./cos_wrapper.sh -t ./template.xml -e ten1.hcp.coe.cse.com -u dev -p start123 -n 4 -cn \"r(7,7)\" -os 100000 -wpn 105,95,85,65,45,25,15,10,5,1 -w 60 -r 30 -d 10 -sn hcp -s true -pro http -od true"
-    echo
+    echo "  -Test    This mode is to generate the workload configuration"
+    echo "  -submit   Generate and submit the generated workload"
+    echo "e.g."
+    echo "./cos_wrapper.sh -t ./template.xml -e ten1.hcp.coe.cse.com -u dev -p start123 -n 4 -cn \"r(7,7)\" -os 100000 -w 60 -r 30 -d 10 -wpn 105,95,85,65,45,25,15,10,5,1 -sn hcp -s true -pro http -od true -test"
+    echo "OR"
+    echo "./cos_wrapper.sh -t ./template.xml -e ten1.hcp.coe.cse.com -u dev -p start123 -n 4 -cn \"r(7,7)\" -os 100000 -w 60 -r 30 -d 10 -wpn 105,95,85,65,45,25,15,10,5,1 -sn hcp -s true -pro http -od true -submit"
+}
+
+test_mode()
+{
+    sed -e "s/@nodes/$NODES/g;
+        s/@tenant/$TENANT/g;
+        s/@user/$USER/g;
+        s/@passwd/$PASSWD/g; 
+        s/@containernum/$CONTAINER_NUM/g; 
+        s/@objsizekb/$OBJ_SIZE_KB/g; 
+        s/@write/$WRITE/g; 
+        s/@read/$READ/g; 
+        s/@delete/$DELETE/g;
+        s/@signer/$SIGNER/g;
+        s/@insecure/$SECURE/g;
+        s/@protocol/$PROTOCOL/g;
+        s/@diroptimize/$OPTIMIZE_DIR/g;
+        s/@workerswm/400/g" $TEMPLATE > $TEMP_XML
+
+    arr1=(`echo $WORKERSPERNODE | sed 's/,/\n/g'`)
+
+    count=1
+    for i in "${arr1[@]}"; do
+        arr2[$count]=`expr $i \* $NODES`
+        count=`expr $count + 1` 
+    done
+
+    for worker in $(seq 1 `expr $count - 1`); do
+        sed -i -e "s/@workers$worker/${arr2[worker]}/" $TEMP_XML
+    done
+    
+    sed -i -e "s/@workersX/${arr2[`expr $count - 1`]}/g" $TEMP_XML
+    sed -i -e "s|@launchcommand|$cmd|" $TEMP_XML
 }
 
 Submit()
 {
    if [ -f $TEMP_XML ]; then
-      echo "Starting the COSBench workload"
+      echo "Submitting the COSBench workload"
       workloadnum=`/opt/cosbench/cos/cli.sh submit $TEMP_XML | awk '{print $4}'`
       Workload_XML="$workloadnum-Workload.xml"
       mv $TEMP_XML $Workload_XML
+      echo 
+      echo "Workload is saved as $Workload_XML"
    fi
 }
 
+
+#LOOP=$(($# / 2))
+LOOP=`expr $# / 2`
+if [ $LOOP == 0 ] && [ $# != 0 ]; then
+#    LOOP=$(($LOOP + 1))
+    LOOP=`expr $LOOP + 1`
+fi
+
+if [ $# != 31 ]; then
+    if [ $# == 0 ] || [ $1 != "-h" ]; then
+        echo "There are missing parameters, please see the help."
+        exit
+    fi
+else
+    LOOP=`expr $LOOP + 1`
+fi
+
+
 cmd="$0 $@"
-echo $cmd
+cmd=`echo $cmd | awk '{$32=""; print}'`
 
 #
 # Parse the command line argument
@@ -116,7 +159,7 @@ for arg in $(seq $LOOP); do
         WORKERSPERNODE=${!arg}
     elif [ ${!arg} == "-sn" ]; then
         shift
-        SIGNER=${!arg}   
+        SINGER=${!arg}   
     elif [ ${!arg} == "-s" ]; then
         shift
         SECURE=${!arg}
@@ -125,42 +168,22 @@ for arg in $(seq $LOOP); do
         PROTOCOL=${!arg}
     elif [ ${!arg} == "-od" ]; then
         shift
-        OPTIMIZE_DIR=${!arg}    
+        OPTIMIZE_DIR=${!arg}
+    elif [ ${!arg} == "-test" ]; then
+        TEST_MODE="True"   
     elif [ ${!arg} == "-submit" ]; then
-        Submit 
-        exit     
+        SUBMIT_MODE="True" 
     fi    
 done
 
-#
-# Replace the placeholder in xml file
-#
-sed -e "s/@nodes/$NODES/g;
-    s/@tenant/$TENANT/g;
-    s/@user/$USER/g;
-    s/@passwd/$PASSWD/g; 
-    s/@containernum/$CONTAINER_NUM/g; 
-    s/@objsizekb/$OBJ_SIZE_KB/g; 
-    s/@write/$WRITE/g; 
-    s/@read/$READ/g; 
-    s/@delete/$DELETE/g;
-    s/@signer/$SIGNER/g;
-    s/@insecure/$SECURE/g;
-    s/@protocol/$PROTOCOL/g;
-    s/@diroptimize/$OPTIMIZE_DIR/g;
-    s/@workerswm/400/g" $TEMPLATE > $TEMP_XML
+if [ $TEST_MODE == "True" ]; then
+    echo "Generating the workload configuration and saving it in temp.xml."
+    test_mode
+    exit
+fi
 
-arr1=(`echo $WORKERSPERNODE | sed 's/,/\n/g'`)
-
-count=1
-for i in "${arr1[@]}"; do
-    arr2[$count]=`expr $i \* $NODES`
-    count=`expr $count + 1` 
-done
-
-for worker in $(seq 1 `expr $count - 1`); do
-    sed -i -e "s/@workers$worker/${arr2[worker]}/" $TEMP_XML
-done
-sed -i -e "s/@workersX/${arr2[`expr $count - 1`]}/g" $TEMP_XML
-#sed -i -e "s/@launchcommand/\"$cmd\"/g" $TEMP_XML
-
+if [ $SUBMIT_MODE == "True" ]; then
+    test_mode
+    Submit
+    exit
+fi
