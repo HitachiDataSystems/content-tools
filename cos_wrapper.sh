@@ -1,72 +1,85 @@
 #!/bin/bash
 
-TEMPLATE=""
-NODES=""
-CONTAINER_NUM=""
-WORKERSPERNODE=""
-OBJ_SIZE_KB=""
-WRITE=""
-READ=""
-DELETE=""
+#Required Input Parameters
+TENANT=""
 USER=""
 PASSWD=""
-TENANT=""
+CONTAINER_NUM=""
+WORKERSPERNODE=""
+
+#Optional Input Parameters with Defaults
+TEMPLATE="10-Stage-template.xml"
+NODES="4"
+RUNTIME="3600"
+INTERVAL="15"
+OBJ_SIZE_KB="1"
+WRITE="100"
+READ="0"
+DELETE="0"
+SIGNER="v4"
+INSECURE="false"
+PROTOCOL="https"
+OPTIMIZE_DIR="true"
+SUBMIT_MODE="false"
+
+#Local Variables:
 TEMP_XML="temp.xml"
-TOTAL_WORKERS=""
-SIGNER=""
-SECURE=""
-PROTOCOL=""
-OPTIMIZE_DIR=""
-TEST_MODE="False"
-SUBMIT_MODE="False"
+COMMAND="$0 $@"
+WRAPPER_DIR=`dirname $0`
+WORKLOAD_DIR="$WRAPPER_DIR/wrapper-workloads"
+TEMP_XML="$WRAPPER_DIR/temp.xml"
 
-
-usage()
+Usage()
 {
     echo
-    echo "This script is a wrapper to run the COSBench workload with the following parameters"
-    echo "  -h   Display this help and exit"
-    echo "  -t   This is a path to template workload xml" 
-    echo "  -e   This is an endpoint in workload xml which is required to create the namespace"
-    echo "  -u   User name to login to HCP tenant"
-    echo "  -p   Password for user to login to HCP tenant"
-    echo "  -n   Total number of nodes on HCP cluster"
-    echo "  -cn  This is the container number in \"r(<cn>, <cn>)\" format like \"r(7,7)\""
-    echo "  -os  This is the object size in KiloBytes"
-    echo "  -wpn This is the worker per node number and it includes first worker as warmup"
-    echo "       So considering the 10 workstages it takes 10 agruments separated by comma"
-    echo "       e.g. -wpn 105,95,85,65,45,25,15,10,5,1"
-    echo "  -w   This is the percentage of write operation"
-    echo "  -r   This is the percentage of read operation"
-    echo "  -d   This is the percentage of delete operation"
-    echo "  -sn  This is type of authentication, it can be either hcp, anon, v2 or v4"
-    echo "  -s   Whether or not to disable certificate verification for SSL, it cab be true or false"
-    echo "  -pro Whether or not to use the SSL, it can http or https"
-    echo "  -od  Whether or not to use an optimized directory structure, it can be true or false"
-    echo "  -Test    This mode is to generate the workload configuration"
-    echo "  -submit   Generate and submit the generated workload"
-    echo "e.g."
-    echo "./cos_wrapper.sh -t ./template.xml -e ten1.hcp.coe.cse.com -u dev -p start123 -n 4 -cn \"r(7,7)\" -os 100000 -w 60 -r 30 -d 10 -wpn 105,95,85,65,45,25,15,10,5,1 -sn hcp -s true -pro http -od true -test"
-    echo "OR"
-    echo "./cos_wrapper.sh -t ./template.xml -e ten1.hcp.coe.cse.com -u dev -p start123 -n 4 -cn \"r(7,7)\" -os 100000 -w 60 -r 30 -d 10 -wpn 105,95,85,65,45,25,15,10,5,1 -sn hcp -s true -pro http -od true -submit"
+    echo "This script is a wrapper to run the HCP COSBench workload with the following parameters"
+    echo "  -h     Display this help and exit"
+    echo "  -ten   The hcp tenant domain                    REQUIRED"
+    echo "  -u     Tenant user name:                        REQUIRED (unless -auth anon)"
+    echo "  -p     Tenant user Password:                    REQUIRED (unless -auth anon)"
+    echo "  -bkt   Bucket number (in bucket name)           REQUIRED"
+    echo "  -wpn   Workers per node, per stage.             REQUIRED"
+    echo "         e.g. For 10 workstages: -wpn 105,95,85,65,45,25,15,10,5,1"
+    echo "  -auth  Auth type, one of: hcp, anon, v2 or v4   DEFAULT = v4"
+    echo "  -os    Object size in KB                        DEFAULT = 1"
+    echo "  -n     Number of HCP nodes:                     DEFAULT = 4"
+    echo "  -rt    Workstage run time in seconds            DEFAULT = 3600"
+    echo "  -ri    Metric reporting interval in seconds     DEFAULT = 15"
+    echo "  -t     Path to a template workload              DEFAULT = template.xml" 
+    echo "  -w     Percent write:                           DEFAULT 100"
+    echo "  -r     Percent read:                            DEFAULT 0"
+    echo "  -d     Percent delete:                          DEFAULT 0"
+    echo "         w + r + d must equal 100"
+    echo "  -insecure Disable SSL certificate validation"
+    echo "  -http     Use http protocol instead of https"
+    echo "  -nodir    Use no directory structure like standard S3 COSBench driver"
+    echo "  -submit   Submit the workload, if omitted write the config to temp.xml and exit"
+    echo "e.g. to test using all defaults"
+    echo "./cos_wrapper.sh -ten ten1.hcp.coe.cse.com -u dev -p start123 -bkt 7 -wpn 105,95,85,65,45,25,15,10,5,1"
+    echo "OR to submit with all arguments specified"
+    echo "./cos_wrapper.sh -submit -t ./template.xml -ten ten1.hcp.coe.cse.com -u dev -p start123 -n 4 -rt 3600 -ri 15 -bkt 7 -os 100000 -w 60 -r 30 -d 10 -wpn 105,95,85,65,45,25,15,10,5,1 -auth hcp -insecure -http -nodir"
 }
 
-test_mode()
+GenerateWorkload()
 {
-    sed -e "s/@nodes/$NODES/g;
-        s/@tenant/$TENANT/g;
-        s/@user/$USER/g;
-        s/@passwd/$PASSWD/g; 
-        s/@containernum/$CONTAINER_NUM/g; 
-        s/@objsizekb/$OBJ_SIZE_KB/g; 
-        s/@write/$WRITE/g; 
-        s/@read/$READ/g; 
-        s/@delete/$DELETE/g;
-        s/@signer/$SIGNER/g;
-        s/@insecure/$SECURE/g;
-        s/@protocol/$PROTOCOL/g;
-        s/@diroptimize/$OPTIMIZE_DIR/g;
-        s/@workerswm/400/g" $TEMPLATE > $TEMP_XML
+		WARMUPWKR=$((100*$NODES))
+    sed -e "s|@nodes|$NODES|g;
+        s|@tenant|$TENANT|g;
+        s|@user|$USER|g;
+        s|@passwd|$PASSWD|g; 
+        s|@containernum|$CONTAINER_NUM|g; 
+        s|@objsizekb|$OBJ_SIZE_KB|g; 
+        s|@write|$WRITE|g; 
+        s|@read|$READ|g; 
+        s|@delete|$DELETE|g;
+        s|@signer|$SIGNER|g;
+        s|@runtime|$RUNTIME|g;
+        s|@interval|$INTERVAL|g;
+        s|@insecure|$INSECURE|g;
+        s|@protocol|$PROTOCOL|g;
+        s|@diroptimize|$OPTIMIZE_DIR|g;
+        s|@workerswm|$WARMUPWKR|g;
+        s|@launchcommand|$COMMAND|g" $TEMPLATE > $TEMP_XML
 
     arr1=(`echo $WORKERSPERNODE | sed 's/,/\n/g'`)
 
@@ -81,7 +94,6 @@ test_mode()
     done
     
     sed -i -e "s/@workersX/${arr2[`expr $count - 1`]}/g" $TEMP_XML
-    sed -i -e "s|@launchcommand|$cmd|" $TEMP_XML
 }
 
 Submit()
@@ -89,45 +101,29 @@ Submit()
    if [ -f $TEMP_XML ]; then
       echo "Submitting the COSBench workload"
       workloadnum=`/opt/cosbench/cos/cli.sh submit $TEMP_XML | awk '{print $4}'`
-      Workload_XML="$workloadnum-Workload.xml"
+      Workload_XML="$WORKLOAD_DIR/$workloadnum-Workload.xml"
       mv $TEMP_XML $Workload_XML
       echo 
       echo "Workload is saved as $Workload_XML"
    fi
 }
 
+mkdir -p $WORKLOAD_DIR
 
-#LOOP=$(($# / 2))
-LOOP=`expr $# / 2`
-if [ $LOOP == 0 ] && [ $# != 0 ]; then
-#    LOOP=$(($LOOP + 1))
-    LOOP=`expr $LOOP + 1`
-fi
-
-if [ $# != 31 ]; then
-    if [ $# == 0 ] || [ $1 != "-h" ]; then
-        echo "There are missing parameters, please see the help."
-        exit
-    fi
-else
-    LOOP=`expr $LOOP + 1`
-fi
-
-
-cmd="$0 $@"
-cmd=`echo $cmd | awk '{$32=""; print}'`
+#Split Command string on this string " -" and count the resulting tokens to determine the number of arguments
+LOOP=$(( $(echo $COMMAND | awk -F " -" '{print NF}') - 1 ))
 
 #
 # Parse the command line argument
 #
 for arg in $(seq $LOOP); do
     if [ ${!arg} == "-h" ]; then 
-        usage
+        Usage
         exit
     elif [ ${!arg} == "-t" ]; then
         shift         
         TEMPLATE=${!arg}
-    elif [ ${!arg} == "-e" ]; then
+    elif [ ${!arg} == "-ten" ]; then
         shift
         TENANT=${!arg}
     elif [ ${!arg} == "-u" ]; then
@@ -139,7 +135,7 @@ for arg in $(seq $LOOP); do
     elif [ ${!arg} == "-n" ]; then
         shift
         NODES=${!arg}
-    elif [ ${!arg} == "-cn" ]; then 
+    elif [ ${!arg} == "-bkt" ]; then 
         shift
         CONTAINER_NUM=${!arg}
     elif [ ${!arg} == "-os" ]; then
@@ -157,33 +153,61 @@ for arg in $(seq $LOOP); do
     elif [ ${!arg} == "-wpn" ]; then
         shift
         WORKERSPERNODE=${!arg}
-    elif [ ${!arg} == "-sn" ]; then
+    elif [ ${!arg} == "-rt" ]; then
         shift
-        SINGER=${!arg}   
-    elif [ ${!arg} == "-s" ]; then
+        RUNTIME=${!arg}
+    elif [ ${!arg} == "-ri" ]; then
         shift
-        SECURE=${!arg}
-    elif [ ${!arg} == "-pro" ]; then
+        INTERVAL=${!arg}
+    elif [ ${!arg} == "-auth" ]; then
         shift
-        PROTOCOL=${!arg}
-    elif [ ${!arg} == "-od" ]; then
-        shift
-        OPTIMIZE_DIR=${!arg}
-    elif [ ${!arg} == "-test" ]; then
-        TEST_MODE="True"   
+        SIGNER=${!arg}   
+    elif [ ${!arg} == "-insecure" ]; then
+        INSECURE="true"
+    elif [ ${!arg} == "-http" ]; then
+        PROTOCOL="http"
+    elif [ ${!arg} == "-nodir" ]; then
+        OPTIMIZE_DIR="false"
     elif [ ${!arg} == "-submit" ]; then
-        SUBMIT_MODE="True" 
+        SUBMIT_MODE="true" 
     fi    
 done
 
-if [ $TEST_MODE == "True" ]; then
-    echo "Generating the workload configuration and saving it in temp.xml."
-    test_mode
-    exit
+INVALIDARGS="false"
+if [ "$TENANT" == "" ]; then
+		echo "-ten is a required parameter."
+		INVALIDARGS="true"
+fi
+if [ "$SIGNER" != "anon" ] && [ "$USER" == "" ]; then
+		echo "-u is a required parameter unless -auth=anon."
+		INVALIDARGS="true"
+fi
+if [ "$SIGNER" != "anon" ] && [ "$PASSWD" == "" ]; then
+		echo "-p is a required parameter unless -auth=anon."
+		INVALIDARGS="true"
+fi
+if ! [[ $CONTAINER_NUM =~ ^[0-9]+$ ]]; then
+    echo "-bkt is a required parameter and must be an integer."
+		INVALIDARGS="true"
+fi
+if [ "$WORKERSPERNODE" == "" ]; then
+		echo "-wpn is a required parameter."
+		INVALIDARGS="true"
+fi
+if ! [ $((WRITE + READ + DELETE)) -eq 100 ]; then
+    echo "'-w' + '-r' + '-d' must add up to 100."
+		INVALIDARGS="true"
+fi
+if [ "$INVALIDARGS" == "true" ]; then
+		echo "Run the command with -h to see help."
+		exit
 fi
 
-if [ $SUBMIT_MODE == "True" ]; then
-    test_mode
+GenerateWorkload
+
+if ! [ $SUBMIT_MODE == "true" ]; then
+		echo "Workload configuration saved as $TEMP_XML"
+else
     Submit
     exit
 fi
