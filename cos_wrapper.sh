@@ -45,7 +45,7 @@ Usage()
     echo "  -n     Number of HCP nodes:                     DEFAULT = 4"
     echo "  -rt    Workstage run time in seconds            DEFAULT = 3600"
     echo "  -ri    Metric reporting interval in seconds     DEFAULT = 15"
-    echo "  -t     Path to a template workload              DEFAULT = template.xml" 
+    echo "  -t     Path to a template workload              DEFAULT = 10-Stage-template.xml" 
     echo "  -w     Percent write:                           DEFAULT 100"
     echo "  -r     Percent read:                            DEFAULT 0"
     echo "  -d     Percent delete:                          DEFAULT 0"
