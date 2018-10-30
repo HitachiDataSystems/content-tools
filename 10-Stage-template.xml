@@ -2,7 +2,7 @@
 <workload name="10Stg-@nodesNodes-@objsizekbKB-W@write-R@read-D@delete" description="">
 <!-- Launch Command: @launchcommand -->
 
-<storage type="hcp" config="username=@user;password=@passwd;endpoint=@tenant;signer_version=@signer;disable_cert_check=@insecure;protocol=@protocol;optimize_dir=@diroptimize" />
+<storage type="hcp" config="username=@user;password=@passwd;endpoint=@tenant;signer_version=@signer;disable_cert_check=@insecure;protocol=@protocol;optimize_dir=@diroptimize;use_expect_continue=@expect100" />
 
 	<workflow>
 		<workstage name="init-bucket">

@@ -21,6 +21,7 @@ INSECURE="false"
 PROTOCOL="https"
 OPTIMIZE_DIR="true"
 SUBMIT_MODE="false"
+EXPECT100="true"
 
 #Local Variables:
 TEMP_XML="temp.xml"
@@ -53,11 +54,12 @@ Usage()
     echo "  -insecure Disable SSL certificate validation"
     echo "  -http     Use http protocol instead of https"
     echo "  -nodir    Use no directory structure like standard S3 COSBench driver"
+    echo "  -no100    Disable expect 100 continue, should go faster with small object"
     echo "  -submit   Submit the workload, if omitted write the config to temp.xml and exit"
     echo "e.g. to test using all defaults"
     echo "./cos_wrapper.sh -ten ten1.hcp.coe.cse.com -u dev -p start123 -bkt 7 -wpn 105,95,85,65,45,25,15,10,5,1"
     echo "OR to submit with all arguments specified"
-    echo "./cos_wrapper.sh -submit -t ./template.xml -ten ten1.hcp.coe.cse.com -u dev -p start123 -n 4 -rt 3600 -ri 15 -bkt 7 -os 100000 -w 60 -r 30 -d 10 -wpn 105,95,85,65,45,25,15,10,5,1 -auth hcp -insecure -http -nodir"
+    echo "./cos_wrapper.sh -submit -t ./template.xml -ten ten1.hcp.coe.cse.com -u dev -p start123 -n 4 -rt 3600 -ri 15 -bkt 7 -os 100000 -w 60 -r 30 -d 10 -wpn 105,95,85,65,45,25,15,10,5,1 -auth hcp -insecure -http -nodir -no100"
 }
 
 GenerateWorkload()
@@ -77,6 +79,7 @@ GenerateWorkload()
         s|@interval|$INTERVAL|g;
         s|@insecure|$INSECURE|g;
         s|@protocol|$PROTOCOL|g;
+        s|@expect100|$EXPECT100|g;
         s|@diroptimize|$OPTIMIZE_DIR|g;
         s|@workerswm|$WARMUPWKR|g;
         s|@launchcommand|$COMMAND|g" $TEMPLATE > $TEMP_XML
@@ -168,8 +171,13 @@ for arg in $(seq $LOOP); do
         PROTOCOL="http"
     elif [ ${!arg} == "-nodir" ]; then
         OPTIMIZE_DIR="false"
+    elif [ ${!arg} == "-no100" ]; then
+        EXPECT100="false"
     elif [ ${!arg} == "-submit" ]; then
         SUBMIT_MODE="true" 
+    else
+        echo "Aborting! Unexpected argument received: ${!arg}"
+        exit
     fi    
 done
 
