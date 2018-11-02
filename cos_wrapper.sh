@@ -59,7 +59,7 @@ Usage()
     echo "e.g. to test using all defaults"
     echo "./cos_wrapper.sh -ten ten1.hcp.coe.cse.com -u dev -p start123 -bkt 7 -wpn 105,95,85,65,45,25,15,10,5,1"
     echo "OR to submit with all arguments specified"
-    echo "./cos_wrapper.sh -submit -t ./template.xml -ten ten1.hcp.coe.cse.com -u dev -p start123 -n 4 -rt 3600 -ri 15 -bkt 7 -os 100000 -w 60 -r 30 -d 10 -wpn 105,95,85,65,45,25,15,10,5,1 -auth hcp -insecure -http -nodir -no100"
+    echo "./cos_wrapper.sh -submit -t ./10-Stage-template.xml -ten ten1.hcp.coe.cse.com -u dev -p start123 -n 4 -rt 3600 -ri 15 -bkt 7 -os 100000 -w 60 -r 30 -d 10 -wpn 105,95,85,65,45,25,15,10,5,1 -auth hcp -insecure -http -nodir -no100"
 }
 
 GenerateWorkload()
