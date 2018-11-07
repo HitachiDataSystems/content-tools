@@ -27,6 +27,7 @@ EXPECT100="true"
 TEMP_XML="temp.xml"
 COMMAND="$0 $@"
 WRAPPER_DIR=`dirname $0`
+TEMPLATE="$WRAPPER_DIR/$TEMPLATE"
 WORKLOAD_DIR="$WRAPPER_DIR/wrapper-workloads"
 TEMP_XML="$WRAPPER_DIR/temp.xml"
 
@@ -64,7 +65,6 @@ Usage()
 
 GenerateWorkload()
 {
-		WARMUPWKR=$((100*$NODES))
     sed -e "s|@nodes|$NODES|g;
         s|@tenant|$TENANT|g;
         s|@user|$USER|g;
@@ -81,7 +81,6 @@ GenerateWorkload()
         s|@protocol|$PROTOCOL|g;
         s|@expect100|$EXPECT100|g;
         s|@diroptimize|$OPTIMIZE_DIR|g;
-        s|@workerswm|$WARMUPWKR|g;
         s|@launchcommand|$COMMAND|g" $TEMPLATE > $TEMP_XML
 
     arr1=(`echo $WORKERSPERNODE | sed 's/,/\n/g'`)
