@@ -12,7 +12,7 @@ The cos_wrapper.sh generates a COSBench workload configuration file for HCP. It 
 Download all of the files from this folder and save them to a folder called cosbench-wrapper in the COSBench home directory. The COSBench home directory is the directory that contains the COSBench files such as cosbench-start.sh and cosbench-stop.sh.
 ## Usage
 ```sh
-# ./cos_wrapper.sh <required-arguments> [<optional-arguments>] [<flags>]
+# ./cos_wrapper.sh <required-arguments> [<optional-arguments>] [<optional-flags>]
 ```
 ### Required Arguments
 | Option | Description |
@@ -50,11 +50,10 @@ Download all of the files from this folder and save them to a folder called cosb
 ## Examples
 Using all the defaults will generate a 4 node, 100 MB write only, 10 Hr.,10 stage workload config:
 ```sh 
-# ./cos_wrapper.sh -ten ten1.hcp.test.com -u user -p pword -bkt 1 \
+./cos_wrapper.sh -ten ten1.hcp.test.com -u user -p pword -bkt 1 \
 -wpn 275,250,225,200,175,150,125,100,75,50
 ```
 Same as above but submitting the workload to COSBench, insecure for HCP self signed cert:
-
 ```.sh
 ./cos_wrapper.sh -ten ten1.hcp.test.com -u user -p pword -bkt 1 \
 -wpn 275,250,225,200,175,150,125,100,75,50 -submit -insecure
@@ -74,7 +73,7 @@ Mixed read, write and delete, with anonymous authentication:
 
 100MB object write test, fewer threads per node :
 ```.sh
-# ./cos_wrapper.sh -ten ten1.hcp.test.com -u user -p pword -bkt 3 \
+./cos_wrapper.sh -ten ten1.hcp.test.com -u user -p pword -bkt 3 \
 -wpn 105,95,85,65,45,25,15,10,5,1 -os 100000 -submit
 ```
 
