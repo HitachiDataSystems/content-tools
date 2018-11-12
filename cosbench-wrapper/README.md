@@ -9,7 +9,7 @@ Creating COSBench workload configuration files is a tedious task, time consuming
 ## Description
 The cos_wrapper.sh generates a COSBench workload configuration file for HCP. It submits the workload configuration to COSBench, and saves the configuration file with the COSBench workload ID into the wrapper-workloads folder.
  ## Installation
-Download the package from this location and extract the cosbench-wrapper folder and its contents into the COSBench home directory. The COSBench home directory is the directory that contains the COSBench files such as cosbench-start.sh and cosbench-stop.sh.
+Download all of the files from this folder and save them to a folder called cosbench-wrapper in the COSBench home directory. The COSBench home directory is the directory that contains the COSBench files such as cosbench-start.sh and cosbench-stop.sh.
 ## Usage
 ```sh
 # ./cos_wrapper.sh <required-arguments> [<optional-arguments>] [<flags>]
