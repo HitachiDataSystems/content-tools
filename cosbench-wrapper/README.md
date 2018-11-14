@@ -21,7 +21,7 @@ Download all of the files from this folder and save them to a folder called cosb
 |-u|Tenant user name, not encoded|
 |-p|Tenant user Password, not encoded|
 |-bkt|Bucket number, will be appended to the bucket name|
-|-wpn|Workers per node, per stage. e.g. For 10 workstages: |-wpn 105,95,85,65,45,25,15,10,5,1 |
+|-wpn|Workers per node, per stage. e.g. For 10 workstages: -wpn 105,95,85,65,45,25,15,10,5,1 |
 
 ### Optional Arguments
 |Option|Description|Default|
@@ -31,7 +31,7 @@ Download all of the files from this folder and save them to a folder called cosb
 |-n|Number of HCP nodes:|4|
 |-rt|Workstage run time in seconds|3600|
 |-ri|Metric reporting interval in seconds for COSBench logs|15|
-|-t|Path to a COSBench workload template configuration|10|-Stage|-template.xml|
+|-t|Path to a COSBench workload template configuration|10-Stage-template.xml|
 |-w|Percent write:|100|
 |-r|Percent read:|0|
 |-d|Percent delete:|0|
@@ -41,7 +41,7 @@ Download all of the files from this folder and save them to a folder called cosb
 |Option|Description|
 | ------ | ------ |
 |-h|Display help and exit|
-|-insecure|Disable SSL certificate validation, almost always needed unless |-http is used or HCP certificates are trusted|
+|-insecure|Disable SSL certificate validation, almost always needed unless -http is used or HCP certificates are trusted|
 |-http|Use http protocol instead of https|
 |-nodir|Use no directory structure like standard S3 COSBench driver|
 |-no100|Disable expect 100 continue|
